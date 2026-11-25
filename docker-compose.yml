@@ -1,0 +1,78 @@
+# Local development: the app (FrankenPHP serving public/ on PHP 8.4), a queue worker, MySQL 8.4 and
+# Mailpit, which catches every e-mail the app sends (http://localhost:8025).
+# `docker compose up` on a fresh clone installs the dependencies, creates .env,
+# runs the migrations, seeds the demo data and serves http://localhost:8000.
+services:
+    app:
+        build:
+            context: .
+            dockerfile: docker/app/Dockerfile
+            args:
+                UID: ${UID:-1000}
+                GID: ${GID:-1000}
+        image: loyalty-app:dev
+        entrypoint: ["docker/app/entrypoint.sh"]
+        command: ["frankenphp", "run", "--config", "/etc/frankenphp/Caddyfile"]
+        ports:
+            - "${APP_PORT:-8000}:8000"
+        # The database settings come from .env (created from .env.example); the tests
+        # use the same server with the loyalty_testing database of phpunit.xml.
+        volumes:
+            - .:/app
+        depends_on:
+            mysql:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD", "curl", "-fsS", "http://localhost:8000/up"]
+            interval: 5s
+            timeout: 3s
+            retries: 30
+            start_period: 120s
+
+    # Runs the queued jobs. It starts once the app is healthy, so the app's entrypoint has installed the
+    # dependencies and migrated the database.
+    queue:
+        build:
+            context: .
+            dockerfile: docker/app/Dockerfile
+            args:
+                UID: ${UID:-1000}
+                GID: ${GID:-1000}
+        image: loyalty-app:dev
+        command: ["php", "artisan", "queue:work", "--tries=1", "--timeout=600"]
+        volumes:
+            - .:/app
+        depends_on:
+            app:
+                condition: service_healthy
+        restart: unless-stopped
+        # The image's health check asks the web server, which this container does not run.
+        healthcheck:
+            disable: true
+
+    mysql:
+        image: mysql:8.4
+        environment:
+            MYSQL_DATABASE: loyalty
+            MYSQL_USER: loyalty
+            MYSQL_PASSWORD: loyalty
+            MYSQL_ROOT_PASSWORD: root
+        ports:
+            - "${FORWARD_DB_PORT:-33060}:3306"
+        volumes:
+            - mysql-data:/var/lib/mysql
+            # Creates loyalty_testing for the test suite when the volume is new.
+            - ./docker/mysql/initdb:/docker-entrypoint-initdb.d:ro
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uloyalty", "-ployalty"]
+            interval: 5s
+            timeout: 3s
+            retries: 30
+
+    mailpit:
+        image: axllent/mailpit:v1.32
+        ports:
+            - "${FORWARD_MAILPIT_PORT:-8025}:8025"
+
+volumes:
+    mysql-data:
