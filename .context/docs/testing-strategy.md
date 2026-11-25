@@ -82,4 +82,14 @@ PHP_CodeSniffer sniff on its fixtures, and L1's tenancy:
 - the back office over HTTP (`tests/Feature/BackOffice/TenancyTest.php`): company A never sees,
   adds to or removes from company B's staff, whatever ids the request carries; the roles; the plan's
   staff limit; a `module:` route answering only while the module is on and the company active; the
-  demo seed.
+  demo seed;
+
+and L2's customers:
+- the values and the code policy (`tests/Unit/Domain/Customer/`) and the use cases on the in-memory
+  adapters of `tests/Support/Customer/` (`CustomerKit`, with a `FixedClock` and a
+  `RecordingOtpSender` that keeps the codes sent);
+- the contracts of `CustomerRepository`, `CodeChallenges` and `Following`;
+- the API over HTTP (`tests/Feature/Api/CustomerApiTest.php`): sign-up, follow and deletion; the
+  code's expiry and both rate limits; each customer reaching only their own account; a staff session
+  not opening the API; and `OpenApiTest`, which keeps `docs/api/openapi.json` in step with the
+  routes.

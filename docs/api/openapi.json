@@ -1,0 +1,538 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Loyalty Platform customer API",
+    "version": "1.0.0",
+    "description": "The API of the customer app (L2). A customer signs up and in with a one-time code sent to their phone and then signs every request with the bearer token it returns. No route names a customer: each acts on the signed-in customer's own account."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000/api/v1",
+      "description": "The development stack"
+    }
+  ],
+  "paths": {
+    "/auth/code": {
+      "post": {
+        "operationId": "requestCode",
+        "tags": [
+          "Session"
+        ],
+        "summary": "Send a one-time code to a phone",
+        "description": "Sends a six-digit code that works for five minutes and five wrong guesses; a newer code replaces it. A phone receives at most three codes in fifteen minutes, and an address may call this ten times a minute. The answer is the same whether the phone has an account or not.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CodeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "The code was sent."
+          },
+          "422": {
+            "description": "A value is refused; `errors` names the field.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/auth/token": {
+      "post": {
+        "operationId": "openSession",
+        "tags": [
+          "Session"
+        ],
+        "summary": "Exchange a code for a token",
+        "description": "Signs the phone's customer in, or up the first time, and returns a token for the device. A wrong, expired or used code is refused with the same message.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The session is open.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Token"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "A value is refused; `errors` names the field.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "closeSession",
+        "tags": [
+          "Session"
+        ],
+        "summary": "Sign this device out",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "description": "Revokes the token the request is signed with; the customer's other devices stay signed in.",
+        "responses": {
+          "204": {
+            "description": "The token is revoked."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          }
+        }
+      }
+    },
+    "/me": {
+      "get": {
+        "operationId": "showAccount",
+        "tags": [
+          "Account"
+        ],
+        "summary": "The signed-in customer",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The customer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateProfile",
+        "tags": [
+          "Account"
+        ],
+        "summary": "Replace the profile",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "description": "Sends the whole profile: a field left out, null or empty is erased.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Profile"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The customer, changed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "422": {
+            "description": "A value is refused; `errors` names the field.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteAccount",
+        "tags": [
+          "Account"
+        ],
+        "summary": "Delete the account",
+        "description": "Erases the phone, the name, the birth date and the CPF, unfollows every company and revokes every token (LGPD). The anonymous account stays so its ledger still adds up; the phone can sign up again as a new customer.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The account is deleted."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          }
+        }
+      }
+    },
+    "/me/companies": {
+      "get": {
+        "operationId": "listFollowedCompanies",
+        "tags": [
+          "Companies"
+        ],
+        "summary": "The companies the customer follows",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The companies, in the order they were followed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Company"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          }
+        }
+      }
+    },
+    "/me/companies/{company}": {
+      "parameters": [
+        {
+          "name": "company",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      ],
+      "put": {
+        "operationId": "followCompany",
+        "tags": [
+          "Companies"
+        ],
+        "summary": "Follow a company",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "description": "Makes the customer one of the company's customers; following it again changes nothing.",
+        "responses": {
+          "204": {
+            "description": "The company is followed."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "404": {
+            "description": "No active company has the id."
+          }
+        }
+      },
+      "delete": {
+        "operationId": "unfollowCompany",
+        "tags": [
+          "Companies"
+        ],
+        "summary": "Stop following a company",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The company is not followed."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "The token `POST /auth/token` returned. It lives sixty days."
+      }
+    },
+    "responses": {
+      "Unauthenticated": {
+        "description": "No token, or a revoked or expired one.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Message"
+            }
+          }
+        }
+      },
+      "TooManyRequests": {
+        "description": "Too many codes for the phone or requests from the address; `Retry-After` says how many seconds to wait.",
+        "headers": {
+          "Retry-After": {
+            "schema": {
+              "type": "integer"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Message"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Phone": {
+        "type": "string",
+        "description": "A mobile number in international form; spaces, dashes, dots and brackets are ignored.",
+        "maxLength": 30,
+        "examples": [
+          "+55 11 91234-5678"
+        ]
+      },
+      "CodeRequest": {
+        "type": "object",
+        "required": [
+          "phone"
+        ],
+        "properties": {
+          "phone": {
+            "$ref": "#/components/schemas/Phone"
+          }
+        }
+      },
+      "TokenRequest": {
+        "type": "object",
+        "required": [
+          "phone",
+          "code",
+          "device"
+        ],
+        "properties": {
+          "phone": {
+            "$ref": "#/components/schemas/Phone"
+          },
+          "code": {
+            "type": "string",
+            "pattern": "^\\d{6}$"
+          },
+          "device": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "A name for the device, shown to the customer among their sessions.",
+            "examples": [
+              "Pixel 9"
+            ]
+          }
+        }
+      },
+      "Token": {
+        "type": "object",
+        "required": [
+          "token",
+          "token_type"
+        ],
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Shown only in this answer; starts with `loyalty_`."
+          },
+          "token_type": {
+            "const": "Bearer"
+          }
+        }
+      },
+      "Profile": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 100
+          },
+          "birth_date": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "description": "A past day, YYYY-MM-DD."
+          },
+          "document": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A CPF with valid check digits, with or without its dots and dash.",
+            "examples": [
+              "529.982.247-25"
+            ]
+          }
+        }
+      },
+      "Customer": {
+        "type": "object",
+        "required": [
+          "id",
+          "phone",
+          "phone_verified_at",
+          "name",
+          "birth_date",
+          "document"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "phone": {
+            "type": "string",
+            "examples": [
+              "+5511912345678"
+            ]
+          },
+          "phone_verified_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "birth_date": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "document": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The CPF's eleven digits."
+          }
+        }
+      },
+      "Company": {
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "Message": {
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "ValidationError": {
+        "type": "object",
+        "required": [
+          "message",
+          "errors"
+        ],
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

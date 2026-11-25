@@ -29,7 +29,17 @@ make install     # Composer and npm dependencies, and the git hooks
 (`docker/app/entrypoint.sh`) runs `composer install`, copies `.env.example` to `.env`, generates the
 app key and runs the migrations and the seeders (`migrate --seed`) before starting the server.
 
-The seeders are empty until the phases that model companies and customers (L1, L2) add demo data.
+The seeders add two demo companies with their staff (see [ADR 0002](/docs/adr/0002-tenancy.md)).
+Customers sign up through the API; in development the one-time code is written to the log:
+
+```bash
+curl -X POST localhost:8000/api/v1/auth/code -H 'Accept: application/json' -d phone=+5511912345678
+docker compose exec app sh -c 'grep "One-time code" storage/logs/laravel.log | tail -n 1'
+curl -X POST localhost:8000/api/v1/auth/token -H 'Accept: application/json' \
+  -d phone=+5511912345678 -d code=<the code> -d device=curl
+```
+
+The API is described in [`docs/api/openapi.json`](/docs/api/openapi.json).
 
 Mailpit catches every e-mail the app sends: http://localhost:8025 (`FORWARD_MAILPIT_PORT`). The
 `queue` service runs `php artisan queue:work` once the app is healthy.

@@ -25,7 +25,13 @@ adds its row here in the same pull request.
 | **staff member** | A person who works for a company and uses the back office. |
 | **role** | What a staff member may do (`Role`): an **owner** manages the staff, an owner or a **manager** configures the modules, an **operator** serves customers. |
 | **acting staff member** | The signed-in staff member with their company (`ActingStaff`), the scope every back-office use case runs in. |
-| **follow** | A customer's link to a company they visit; a customer sees and earns only at companies they follow. |
+| **follow** | A customer's link to a company they visit (`Following`, the `company_customers` table); a customer sees and earns only at companies they follow. |
+| **one-time code** | The six digits sent to a phone to sign up or in (`IssuedCode`); kept only as a hash. Never "token" or "password". |
+| **code challenge** | A code sent and not used yet, with its wrong guesses and expiry (`CodeChallenge`). |
+| **profile** | What a customer tells about themselves, all optional: name, birth date, document (`CustomerProfile`). |
+| **document** | A customer's CPF, the Brazilian taxpayer number (`Document`). |
+| **session** | A device signed in to the app, with its token (`CustomerSession`, `AccessTokens`). |
+| **anonymise** | Erase a deleted account's personal data and keep its row, so its history still adds up. Never "delete" for the row. |
 | **check-in** | A customer's recorded visit to a company. |
 | **level** | A rank a customer reaches at a company by checking in; it sets the cashback percentage. |
 | **cashback** | The share of a purchase credited back to the customer's wallet. |

@@ -22,7 +22,16 @@ scaffoldVersion: "2.0.0"
   local Docker stack and nothing else.
 - **External services sit behind ports with development adapters**: no real SMS, payment or push
   account is needed to run or test the app.
-- Passwords and one-time codes are hashed; one-time codes expire and are rate-limited.
+- Passwords and one-time codes are hashed; one-time codes expire and are rate-limited. A code is
+  six digits from `random_int`, kept as an HMAC-SHA256 under the app key, valid for five minutes
+  and five wrong guesses; only a phone's latest code works; a phone gets three codes in fifteen
+  minutes and an address ten sign-in requests a minute. A refused code gets one answer whatever the
+  reason ([ADR 0003](/docs/adr/0003-customers.md)).
+- **The customer API reads tokens only.** Sanctum's personal access tokens, prefixed `loyalty_`,
+  live sixty days and are revoked per device on sign-out and all at once when the account is
+  deleted; a back-office session never opens the API.
+- **Deleting an account erases the personal data** (phone, name, birth date, CPF) and keeps an
+  anonymous row, so the ledger still adds up (LGPD).
 - CSRF protection on every state-changing web route; rate limits on sign-in and code requests.
 - Every query goes through Eloquent or the query builder with bindings; no SQL is built from strings.
 
@@ -37,6 +46,7 @@ scaffoldVersion: "2.0.0"
 | Type confusion, loose comparisons | PHPStan max + `phpstan-strict-rules` |
 | Dependency updates | Dependabot (Composer, npm, GitHub Actions, Docker), weekly |
 | Secrets pushed by mistake | GitHub secret scanning and push protection |
+| Code expiry, guesses, rate limits, one customer per token | `tests/Unit/Application/Customer/`, `tests/Feature/Api/CustomerApiTest.php` |
 
 CodeQL has no PHP analyser; the PHP code is covered by the static analysis above.
 

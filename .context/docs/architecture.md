@@ -75,24 +75,39 @@ for identifiers, money and the `DomainError` base).
 
 ## What exists today
 
-- `app/Domain/Shared/` — identifiers, `Name`, the `DomainError` base.
+- `app/Domain/Shared/` — identifiers, `Name`, the `DomainError` base, the `Clock` port.
 - `app/Domain/Tenancy/` — L1 (#2): `Company` (a `Subscription` of a `Plan` and a `CompanyStatus`,
   and its `Module`s), `StaffMember` with a `Role`, the credentials (`EmailAddress`, `PlainPassword`,
   `HashedPassword`), the `CompanyRepository`, `StaffRepository` and `PasswordHasher` ports, and their
   errors ([ADR 0002](/docs/adr/0002-tenancy.md)).
+- `app/Domain/Customer/` — L2 (#3): `Customer` with its `PhoneNumber` and `CustomerProfile`
+  (`Document` is the CPF), the `CodePolicy` of one-time codes, the ports `CustomerRepository`,
+  `CodeChallenges`, `OneTimeCodes`, `OtpSender`, `Following` and `AccessTokens`, and their errors
+  ([ADR 0003](/docs/adr/0003-customers.md)).
 - `app/Application/Tenancy/` — `ActingStaff` (the scope of every back-office use case),
   `IdentifyStaff`, `SignIn`, `ConfigureModules`, `ListStaff`, `AddStaffMember`, `RemoveStaffMember`.
+- `app/Application/Customer/` — `RequestCode`, `VerifyCode`, `CustomerSession`, `ManageProfile`,
+  `FollowCompanies`, `DeleteAccount`.
 - `app/Infrastructure/` — `Persistence/EloquentCompanyRepository` and `EloquentStaffRepository`
-  (with `CompanyRows` and `StaffRows`), `Tenancy/FrameworkPasswordHasher`.
+  (with `CompanyRows` and `StaffRows`), `Tenancy/FrameworkPasswordHasher`;
+  `Persistence/EloquentCustomerRepository` (with `CustomerRows`), `EloquentCodeChallenges` and
+  `EloquentFollowing`; `Customer/HmacOneTimeCodes`, `LogOtpSender` (the development double of an
+  SMS gateway) and `SanctumAccessTokens`; `Shared/SystemClock`.
 - `app/Http/` — the back office (`Controllers/BackOffice/`: sign-in, modules, staff) and the
-  `module:<name>` middleware (`Middleware/EnsureModuleEnabled`).
+  `module:<name>` middleware (`Middleware/EnsureModuleEnabled`); the customer API
+  (`Controllers/Api/`, `Requests/Api/`, `Resources/CustomerJson`), described in
+  [`docs/api/openapi.json`](/docs/api/openapi.json).
 - `app/Console/` — `ContextSurfaces` and the two `context:*` commands (see [tooling.md](tooling.md)).
 - `app/Infrastructure/Persistence/Eloquent/User.php` — the framework's user model, moved out of
   `app/Models` so Eloquent stays in Infrastructure.
 - `app/Providers/` — `TenancyServiceProvider` binds the tenancy ports; `BackOfficeServiceProvider`
-  builds the `ActingStaff` from the session.
+  builds the `ActingStaff` from the session; `CustomerServiceProvider` binds the customers' storage
+  and the clock, `OneTimeCodeServiceProvider` the codes and their sender, and
+  `CustomerApiServiceProvider` the tokens and the `CustomerId` of the request's token.
 - `routes/web.php` — the welcome page and the back office (`/back-office`, no route names a company);
   `/up` is Laravel's health route, used by the container's health check.
+- `routes/api.php` — the customer API under `/api/v1` (no route names a customer): `auth/code`,
+  `auth/token`, `me` and `me/companies`.
 
 ## Runtime
 
