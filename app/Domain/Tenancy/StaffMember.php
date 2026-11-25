@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Domain\Tenancy;
 
-use App\Domain\Shared\Name;
-
 /**
  * A person who works for one company and uses its back office, with a role there.
  */
@@ -17,7 +15,7 @@ final readonly class StaffMember
     public function __construct(
         public StaffMemberId $id,
         public CompanyId $company,
-        public Name $name,
+        public StaffProfile $profile,
         public Role $role,
     ) {}
 

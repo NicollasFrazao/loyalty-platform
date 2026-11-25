@@ -6,3 +6,4 @@ decided, what else was considered, and what it costs. A superseded record stays,
 | # | Decision | Status |
 | --- | --- | --- |
 | [0001](0001-layered-architecture.md) | Layered architecture: Domain, Application, Infrastructure, Http, enforced by Deptrac | Accepted |
+| [0002](0002-tenancy.md) | Tenancy by construction: the acting staff member is the scope, and every company query takes the company | Accepted |

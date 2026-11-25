@@ -74,5 +74,12 @@ Unit tests never touch the database, so `tests/Unit/` runs without the stack.
 
 ## Today
 
-The welcome page and the health route, the `context:*` commands and their classes, and the local
-PHP_CodeSniffer sniff on its fixtures.
+The welcome page and the health route, the `context:*` commands and their classes, the local
+PHP_CodeSniffer sniff on its fixtures, and L1's tenancy:
+- the domain's rules (plans, modules, roles) and the use cases on the in-memory adapters of
+  `tests/Support/Tenancy/` (`TenancyKit` builds two companies);
+- the contracts of `CompanyRepository` and `StaffRepository`;
+- the back office over HTTP (`tests/Feature/BackOffice/TenancyTest.php`): company A never sees,
+  adds to or removes from company B's staff, whatever ids the request carries; the roles; the plan's
+  staff limit; a `module:` route answering only while the module is on and the company active; the
+  demo seed.

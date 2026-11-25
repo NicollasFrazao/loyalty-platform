@@ -4,19 +4,26 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Infrastructure\Persistence\Eloquent\CompanyRecord;
 use Illuminate\Database\Seeder;
 
 /**
- * Entry point of `php artisan db:seed`. Empty on purpose: the demo data arrives with the phases that
- * model it (companies in L1, customers in L2).
+ * Seeds a fresh database with the demo data: two companies and their staff (L1). The app container
+ * runs it on every start (`migrate --seed`), so it does nothing once a company exists.
  */
 final class DatabaseSeeder extends Seeder
 {
     /**
-     * Seeds the application's database.
+     * Runs the seeders, unless the database was seeded already.
      */
     public function run(): void
     {
-        // The seeders of each phase are called from here as they arrive.
+        if (CompanyRecord::query()->exists()) {
+            $this->command?->info('Companies exist already; nothing seeded.');
+
+            return;
+        }
+
+        $this->call([DemoCompaniesSeeder::class]);
     }
 }

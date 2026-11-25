@@ -75,12 +75,24 @@ for identifiers, money and the `DomainError` base).
 
 ## What exists today
 
+- `app/Domain/Shared/` — identifiers, `Name`, the `DomainError` base.
+- `app/Domain/Tenancy/` — L1 (#2): `Company` (a `Subscription` of a `Plan` and a `CompanyStatus`,
+  and its `Module`s), `StaffMember` with a `Role`, the credentials (`EmailAddress`, `PlainPassword`,
+  `HashedPassword`), the `CompanyRepository`, `StaffRepository` and `PasswordHasher` ports, and their
+  errors ([ADR 0002](/docs/adr/0002-tenancy.md)).
+- `app/Application/Tenancy/` — `ActingStaff` (the scope of every back-office use case),
+  `IdentifyStaff`, `SignIn`, `ConfigureModules`, `ListStaff`, `AddStaffMember`, `RemoveStaffMember`.
+- `app/Infrastructure/` — `Persistence/EloquentCompanyRepository` and `EloquentStaffRepository`
+  (with `CompanyRows` and `StaffRows`), `Tenancy/FrameworkPasswordHasher`.
+- `app/Http/` — the back office (`Controllers/BackOffice/`: sign-in, modules, staff) and the
+  `module:<name>` middleware (`Middleware/EnsureModuleEnabled`).
 - `app/Console/` — `ContextSurfaces` and the two `context:*` commands (see [tooling.md](tooling.md)).
 - `app/Infrastructure/Persistence/Eloquent/User.php` — the framework's user model, moved out of
   `app/Models` so Eloquent stays in Infrastructure.
-- `app/Providers/AppServiceProvider.php` — the composition root, empty until L1.
-- `routes/web.php` — the welcome page; `/up` is Laravel's health route, used by the container's
-  health check.
+- `app/Providers/` — `TenancyServiceProvider` binds the tenancy ports; `BackOfficeServiceProvider`
+  builds the `ActingStaff` from the session.
+- `routes/web.php` — the welcome page and the back office (`/back-office`, no route names a company);
+  `/up` is Laravel's health route, used by the container's health check.
 
 ## Runtime
 

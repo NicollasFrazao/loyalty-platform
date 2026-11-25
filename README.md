@@ -9,8 +9,10 @@ their cashback, keep a wallet per company, redeem vouchers and join paid members
 ## Status
 
 L0, the foundation: a Laravel 13 (PHP 8.4) skeleton on Docker (app, queue worker, MySQL 8.4,
-Mailpit) with the full quality gate in CI and the context base for people and coding agents. The
-domain arrives from L1 on: companies, plans and modules.
+Mailpit) with the full quality gate in CI and the context base for people and coding agents. L1,
+tenancy: companies with a plan and modules, and a back office where each company's staff (owner,
+manager, operator) see and change only their own company. Demo: `owner@corner-bar.example`,
+password `password`.
 
 ## Running locally
 

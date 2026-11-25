@@ -14,13 +14,15 @@ use App\Domain\Tenancy\Plan;
 use App\Domain\Tenancy\Role;
 use App\Domain\Tenancy\StaffMember;
 use App\Domain\Tenancy\StaffMemberId;
+use App\Domain\Tenancy\StaffProfile;
+use App\Domain\Tenancy\Subscription;
 
 /**
  * A company on the plan given, active unless said otherwise, with the modules given.
  */
 function company(Plan $plan, CompanyStatus $status = CompanyStatus::Active, Module ...$modules): Company
 {
-    return new Company(new CompanyId(1), Name::from('Corner Bar'), $plan, $status, ...$modules);
+    return new Company(new CompanyId(1), Name::from('Corner Bar'), new Subscription($plan, $status), ...$modules);
 }
 
 it('lets a plan allow its modules and its staff', function (Plan $plan, array $allowed, int $staff): void {
@@ -55,7 +57,7 @@ it('serves a module only while active and enabled', function (): void {
 });
 
 it('gives each role what it may do, and ties a staff member to one company', function (): void {
-    $operator = new StaffMember(new StaffMemberId(7), new CompanyId(1), Name::from('Ana'), Role::Operator);
+    $operator = new StaffMember(new StaffMemberId(7), new CompanyId(1), StaffProfile::from('Ana', 'ana@corner.example'), Role::Operator);
 
     expect([Role::Owner->canManageStaff(), Role::Manager->canManageStaff(), Role::Operator->canManageStaff()])->toBe([true, false, false])
         ->and([Role::Owner->canConfigure(), Role::Manager->canConfigure(), Role::Operator->canConfigure()])->toBe([true, true, false])

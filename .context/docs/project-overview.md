@@ -51,7 +51,9 @@ sports, shop and gift cards are future work (#12 and its sub-issues).
 ## Current state
 
 L0: the skeleton serves the welcome page, the local stack runs with `make up`, and every check of
-the quality gate runs in CI as its own job. There is no domain code yet.
+the quality gate runs in CI as its own job. L1 adds tenancy: companies with a plan and the modules
+they enabled, staff members with roles who sign in to a back office scoped to their own company, and
+two demo companies.
 
 ## Principles
 

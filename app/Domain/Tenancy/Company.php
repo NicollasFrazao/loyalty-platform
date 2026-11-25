@@ -13,6 +13,16 @@ use LogicException;
 final readonly class Company
 {
     /**
+     * The plan the company subscribes to.
+     */
+    public Plan $plan;
+
+    /**
+     * Whether the company is active.
+     */
+    public CompanyStatus $status;
+
+    /**
      * The modules enabled, keyed by value.
      *
      * @var array<string, Module>
@@ -27,15 +37,16 @@ final readonly class Company
     public function __construct(
         public CompanyId $id,
         public Name $name,
-        public Plan $plan,
-        public CompanyStatus $status,
+        Subscription $subscription,
         Module ...$modules,
     ) {
+        $this->plan = $subscription->plan;
+        $this->status = $subscription->status;
         $enabled = [];
 
         foreach ($modules as $module) {
-            if (! $plan->allows($module)) {
-                throw ModuleNotInPlan::of($module, $plan);
+            if (! $this->plan->allows($module)) {
+                throw ModuleNotInPlan::of($module, $this->plan);
             }
 
             $enabled[$module->value] = $module;
@@ -51,7 +62,7 @@ final readonly class Company
      */
     public function enable(Module $module): self
     {
-        return new self($this->id, $this->name, $this->plan, $this->status, ...[...$this->modules(), $module]);
+        return new self($this->id, $this->name, $this->subscription(), ...[...$this->modules(), $module]);
     }
 
     /**
@@ -109,10 +120,18 @@ final readonly class Company
     private function with(array $modules): self
     {
         try {
-            return new self($this->id, $this->name, $this->plan, $this->status, ...$modules);
+            return new self($this->id, $this->name, $this->subscription(), ...$modules);
         } catch (ModuleNotInPlan $impossible) {
             // A subset of modules the plan allowed is still allowed.
             throw new LogicException($impossible->getMessage(), 0, $impossible);
         }
+    }
+
+    /**
+     * The company's plan and status.
+     */
+    private function subscription(): Subscription
+    {
+        return new Subscription($this->plan, $this->status);
     }
 }

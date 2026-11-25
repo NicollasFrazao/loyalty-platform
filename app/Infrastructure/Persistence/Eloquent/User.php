@@ -13,10 +13,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 /**
- * Account that signs in to the app; the Eloquent model behind Laravel's session guard.
+ * A staff member who signs in to the back office; the Eloquent model behind Laravel's session guard.
  *
- * It lives in Infrastructure because it is a persistence detail: the domain will get its own
- * account concepts when accounts are rebuilt (issue #8), and this model will map to them.
+ * It lives in Infrastructure because it is a persistence detail: the staff repository maps it to the
+ * domain's staff member. Its company and role are never mass-assigned: only the repository and the
+ * factories write them.
  */
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
