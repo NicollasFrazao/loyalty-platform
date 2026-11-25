@@ -1,0 +1,35 @@
+{
+    "$schema": "https://www.schemastore.org/package.json",
+    "name": "loyalty-platform",
+    "private": true,
+    "type": "module",
+    "engines": {
+        "node": ">=22"
+    },
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite",
+        "lint": "eslint . --max-warnings 0",
+        "check:unused": "knip",
+        "prepare": "husky",
+        "audit": "npm audit --omit=dev --audit-level=high"
+    },
+    "overrides": {
+        "minimatch": "^11.0.1"
+    },
+    "devDependencies": {
+        "@commitlint/cli": "21.2.4",
+        "@commitlint/config-conventional": "21.2.4",
+        "@eslint/js": "10.0.1",
+        "@tailwindcss/vite": "^4.0.0",
+        "eslint": "10.14.0",
+        "eslint-plugin-sonarjs": "4.2.2",
+        "globals": "17.14.0",
+        "husky": "9.1.7",
+        "knip": "6.44.1",
+        "laravel-vite-plugin": "^3.1",
+        "lint-staged": "17.6.0",
+        "tailwindcss": "^4.0.0",
+        "vite": "^8.0.0"
+    }
+}
