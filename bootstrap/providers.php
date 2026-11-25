@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Providers\AppServiceProvider;
 use App\Providers\BackOfficeServiceProvider;
+use App\Providers\CheckInServiceProvider;
 use App\Providers\CustomerApiServiceProvider;
 use App\Providers\CustomerServiceProvider;
 use App\Providers\OneTimeCodeServiceProvider;
@@ -16,4 +17,5 @@ return [
     CustomerServiceProvider::class,
     OneTimeCodeServiceProvider::class,
     CustomerApiServiceProvider::class,
+    CheckInServiceProvider::class,
 ];

@@ -14,6 +14,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $id
  * @property int $company_id
  * @property int $customer_id
+ * @property string|null $level
+ * @property int $spent_cents
  */
 #[Unguarded]
 #[Table('company_customers', timestamps: false)]
